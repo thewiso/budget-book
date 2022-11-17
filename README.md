@@ -4,5 +4,5 @@
 Currently only CSV import is implemented
 
 ### TODO:
-[ ] XML Import
-[ ] i18n
+- [ ] XML Import
+- [ ] i18n
