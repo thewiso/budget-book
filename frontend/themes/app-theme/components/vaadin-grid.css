@@ -1,0 +1,12 @@
+.added-grid-item {
+    /*background-color: #b1ffb7;*/
+    background-color: var(--lumo-success-color-50pct);
+}
+
+.changed-grid-item {
+    background-color: rgb(255, 255, 128);
+}
+
+.deleted-grid-item {
+    background-color: #ffd9d9;
+}

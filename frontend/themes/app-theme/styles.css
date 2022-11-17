@@ -1,0 +1,41 @@
+@import url('./views/login-view.css');
+
+.icon-small {
+	height: var(--lumo-icon-size-s);
+	width: var(--lumo-icon-size-s);
+}
+
+.icon-large {
+	height: var(--lumo-icon-size-l);
+	width: var(--lumo-icon-size-l);
+}
+
+.with-top-padding-l {
+	padding-top: var(--lumo-space-l);
+}
+
+.text-red-bold{
+	color: var(--lumo-error-text-color);
+	font-weight: bold;
+}
+
+.text-yellow-bold{
+	color: rgb(231, 214, 1);
+	font-weight: bold;
+}
+
+.text-green-bold{
+	color: var(--lumo-success-text-color);
+	font-weight: bold;
+}
+
+.navbar-logout-button{
+	margin-left: auto;
+	margin-right: 15px;
+}
+
+.navbar-title {
+	font-size: var(--lumo-font-size-l);
+	margin: 0;
+	margin-left: 5px;
+}
