@@ -91,6 +91,7 @@ public class AccountOverview extends VerticalLayout {
 		// BUDGET ACCOUNTS
 		budgetAccountSearchField = new TextField();
 		budgetAccountSearchField.setPlaceholder("Search");
+		budgetAccountSearchField.setClearButtonVisible(true);
 		budgetAccountSearchField.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
 		budgetAccountSearchField.setValueChangeMode(ValueChangeMode.EAGER);
 		budgetAccountSearchField.addValueChangeListener(e -> budgetAccountsGridDataView.refreshAll());

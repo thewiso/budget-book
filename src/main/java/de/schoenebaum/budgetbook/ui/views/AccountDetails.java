@@ -18,8 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.component.ClickEvent;
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValue.ValueChangeEvent;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.MenuItem;
@@ -71,7 +71,8 @@ import de.schoenebaum.budgetbook.ui.model.UITransaction;
 
 @PermitAll
 @Route(value = "accounts", layout = MainLayout.class)
-public class AccountDetails extends VerticalLayout implements HasUrlParameter<String>, BeforeLeaveObserver, HasDynamicTitle {
+public class AccountDetails extends VerticalLayout
+		implements HasUrlParameter<String>, BeforeLeaveObserver, HasDynamicTitle {
 
 	private static final long serialVersionUID = -3104605716568210030L;
 	private static final Logger LOG = LoggerFactory.getLogger(AccountDetails.class);
@@ -100,6 +101,7 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 	private GridListDataView<GridTransaction> transactionsGridDataView;
 	private Column<GridTransaction> dateColumn;
 	private FooterCell sumCell;
+	private Span sumSpan;
 
 	private boolean editModeActivated = false;
 	private TransactionForm transactionForm;
@@ -116,7 +118,7 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 		this.transactionService = externalTransactionService;
 
 		title = new H2();
-		
+
 		// SELECT
 		accountSelect = new AccountSelect(accountService);
 		accountSelect.setEmptySelectionAllowed(true);
@@ -127,16 +129,16 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 		transactionsSearchField = new TextField();
 		transactionsSearchField.setPlaceholder("Search");
 		transactionsSearchField.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
+		transactionsSearchField.setClearButtonVisible(true);
 		transactionsSearchField.setValueChangeMode(ValueChangeMode.EAGER);
-		transactionsSearchField.addValueChangeListener(e -> transactionsGridDataView.refreshAll());
-
+		transactionsSearchField.addValueChangeListener(this::onTransactionsSearchFieldValueChange);
 
 		// EDIT LIST ACTIONS
 		editListButton = new Button("Edit", new Icon(VaadinIcon.PENCIL));
 		editListButton.addClickListener(this::onEditListButtonClicked);
 
 		editListActionMenuBar = new MenuBar();
-		
+
 		addTransactionMenuItem = editListActionMenuBar.addItem(new Icon(VaadinIcon.PLUS));
 		addTransactionMenuItem.add("Add");
 		addTransactionMenuItem.addThemeNames("success");
@@ -166,7 +168,6 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 		editListControls = new Div();
 		editListControls.add(editListButton);
 		editListControls.addClassName("with-top-padding-l");
-		
 
 		topGridBar = new HorizontalLayout();
 		topGridBar.setJustifyContentMode(JustifyContentMode.BETWEEN);
@@ -197,8 +198,11 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 			.setSortable(true)
 			.setAutoWidth(true);
 
-		sumCell = transactionsGrid.prependFooterRow().getCell(amountColumn);
-		
+		sumCell = transactionsGrid.prependFooterRow()
+			.getCell(amountColumn);
+		sumSpan = new Span();
+		sumCell.setComponent(sumSpan);
+
 		GridSortOrder<GridTransaction> order = new GridSortOrder<>(dateColumn, SortDirection.DESCENDING);
 		transactionsGrid.sort(Arrays.asList(order));
 
@@ -215,6 +219,7 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 			.setIdentifierGetter(t -> t.getTransaction()
 				.getId());
 		transactionsGridDataView.addFilter(this::filterTransactions);
+	
 
 		// TRANSACTION FORM
 		transactionForm = new TransactionForm(accountService);
@@ -243,7 +248,8 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 			refreshTransactions(accountId);
 			enableElements = true;
 		}
-		
+
+		transactionsSearchField.clear();
 		topGridBar.setEnabled(enableElements);
 		transactionsGrid.setEnabled(enableElements);
 	}
@@ -267,7 +273,7 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 		transactions.clear();
 		transactions.addAll(transactionService.getTransactions(selectedAccount));
 		transactionsGridDataView.refreshAll();
-		sumCell.setComponent(createSumComponent(transactionService.getSum(selectedAccount)));
+		updateSum();
 	}
 
 	protected void onSelectValueChanged(ValueChangeEvent<Account> event) {
@@ -283,6 +289,11 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 		getUI().ifPresent(ui -> ui.navigate(getClass(), accountId));
 
 	}
+	
+	protected void onTransactionsSearchFieldValueChange(ComponentValueChangeEvent<TextField, String> event) {
+		transactionsGridDataView.refreshAll();
+		updateSum();
+	}
 
 	protected boolean filterTransactions(GridTransaction transaction) {
 		String searchTerm = transactionsSearchField.getValue()
@@ -291,11 +302,11 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 		if (searchTerm.isEmpty()) {
 			return true;
 		}
-		
+
 		String[] searchTerms = searchTerm.split("\\s");
-		
-		return StringUtils.containsAnyIgnoreCase(transaction.getSubject(), searchTerms) 
-				|| StringUtils.containsAnyIgnoreCase(transaction.getRelatedPartyName(), searchTerms) ;
+
+		return StringUtils.containsAnyIgnoreCase(transaction.getSubject(), searchTerms)
+				|| StringUtils.containsAnyIgnoreCase(transaction.getRelatedPartyName(), searchTerms);
 	}
 
 	protected void onEditListButtonClicked(ClickEvent<Button> event) {
@@ -368,8 +379,9 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 			.createSimpleConfirmDialog("Save changes", "Do you really want to save changes?", confirmEvent -> {
 				boolean error = false;
 
-				Iterator<Entry<UUID, Transaction>> changedIter = changedTransactions.entrySet().iterator();
-				while(changedIter.hasNext()) {
+				Iterator<Entry<UUID, Transaction>> changedIter = changedTransactions.entrySet()
+					.iterator();
+				while (changedIter.hasNext()) {
 					var changedEntry = changedIter.next();
 					try {
 						transactionService.save(changedEntry.getValue());
@@ -380,8 +392,9 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 					}
 				}
 
-				Iterator<Entry<UUID, Transaction>> deletedIter = deletedTransactions.entrySet().iterator();
-				while(deletedIter.hasNext()) {
+				Iterator<Entry<UUID, Transaction>> deletedIter = deletedTransactions.entrySet()
+					.iterator();
+				while (deletedIter.hasNext()) {
 					var deleteEntry = deletedIter.next();
 					try {
 						transactionService.delete(deleteEntry.getValue());
@@ -392,8 +405,9 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 					}
 				}
 
-				Iterator<Entry<UUID, Transaction>> addedIter = addedTransactions.entrySet().iterator();
-				while(addedIter.hasNext()) {
+				Iterator<Entry<UUID, Transaction>> addedIter = addedTransactions.entrySet()
+					.iterator();
+				while (addedIter.hasNext()) {
 					var addedEntry = addedIter.next();
 					try {
 						transactionService.save(addedEntry.getValue());
@@ -493,14 +507,16 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 		if (activate) {
 			editListControls.removeAll();
 			editListControls.add(editListActionMenuBar);
-			transactionForm.scrollIntoView();		
-			sumCell.getComponent().setVisible(false);
+			transactionForm.scrollIntoView();
+			sumCell.getComponent()
+				.setVisible(false);
 		} else {
 			editListControls.removeAll();
 			editListControls.add(editListButton);
 			transactionsGrid.deselectAll();
 			changeVisibilityByFormValidity(true);
-			sumCell.getComponent().setVisible(true);
+			sumCell.getComponent()
+				.setVisible(true);
 		}
 	}
 
@@ -521,26 +537,28 @@ public class AccountDetails extends VerticalLayout implements HasUrlParameter<St
 			throw new IllegalArgumentException();
 		}
 	}
-	
-	protected Component createSumComponent(BigDecimal sum) {
-		Span component = new Span(sum.toPlainString());
-		if(sum.compareTo(BigDecimal.ZERO) >= 0) {
-			component.addClassName("text-green-bold");
-		}else {
-			component.addClassName("text-red-bold");
+
+	protected void updateSum() {
+		BigDecimal sum = transactionsGridDataView.getItems()
+			.map(GridTransaction::getSubjectiveAmount)
+			.reduce(BigDecimal.ZERO, BigDecimal::add);
+		sumSpan.setText(sum.toPlainString());
+		if (sum.compareTo(BigDecimal.ZERO) >= 0) {
+			sumSpan.setClassName("text-green-bold");
+		} else {
+			sumSpan.setClassName("text-red-bold");
 		}
-			
-		return component;
 	}
 
 	@Override
 	public String getPageTitle() {
-		if(accountSelect.getValue() == null) {
+		if (accountSelect.getValue() == null) {
 			return "Account | Budget Book";
-		}else {
-			return accountSelect.getValue().getName() + " | Budget Book";
+		} else {
+			return accountSelect.getValue()
+				.getName() + " | Budget Book";
 		}
-		
+
 	}
 
 }

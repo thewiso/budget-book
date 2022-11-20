@@ -94,6 +94,7 @@ public class InternalTransactionTemplateOverview extends VerticalLayout {
 		// TOP GRID BAR
 		templateSearchField = new TextField();
 		templateSearchField.setPlaceholder("Search");
+		templateSearchField.setClearButtonVisible(true);
 		templateSearchField.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
 		templateSearchField.setValueChangeMode(ValueChangeMode.EAGER);
 		templateSearchField.addValueChangeListener(e -> templatesGridDataView.refreshAll());
