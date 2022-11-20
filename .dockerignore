@@ -41,7 +41,6 @@ frontend/generated
 ### CUSTOM
 /data
 /config
-/deployment/config
 /deployment/mnt
 /deployment/images
 /log

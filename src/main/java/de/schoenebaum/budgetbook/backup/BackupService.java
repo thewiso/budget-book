@@ -35,7 +35,8 @@ public class BackupService {
 				throw new IllegalStateException("Can not get folder path of database");
 			}
 		} else {
-			throw new IllegalStateException("Can not extract backup folder from jdbc connection string");
+			backupFolder = null;
+			LOG.info("Can not extract backup folder from jdbc connection string");
 		}
 
 	}
@@ -43,22 +44,23 @@ public class BackupService {
 	@Scheduled(cron = "0 10 0 * * *")
 	@Transactional
 	public void backupDatabase() {
-		int dayIndex = LocalDate.now()
-			.getDayOfWeek()
-			.minus(1)
-			.getValue();
-		String backupFileName = String.format(BACKUP_FILE_NAME_TEMPLATE, dayIndex);
-		String backupFilePath = backupFolder.getPath() + "/" + backupFileName;
-		
-		try {
-			Query query = entityManager.createNativeQuery("BACKUP TO :filePath");
-			query.setParameter("filePath", backupFilePath);
-			query.executeUpdate();
-			LOG.info("Successfully created backup of database with path {}", backupFilePath);
-		} catch (Exception e) {
-			LOG.error("Could not backup database to path {}", backupFilePath, e);
-		}
+		if (backupFolder != null) {
+			int dayIndex = LocalDate.now()
+				.getDayOfWeek()
+				.minus(1)
+				.getValue();
+			String backupFileName = String.format(BACKUP_FILE_NAME_TEMPLATE, dayIndex);
+			String backupFilePath = backupFolder.getPath() + "/" + backupFileName;
 
+			try {
+				Query query = entityManager.createNativeQuery("BACKUP TO :filePath");
+				query.setParameter("filePath", backupFilePath);
+				query.executeUpdate();
+				LOG.info("Successfully created backup of database with path {}", backupFilePath);
+			} catch (Exception e) {
+				LOG.error("Could not backup database to path {}", backupFilePath, e);
+			}
+		}
 	}
 
 }

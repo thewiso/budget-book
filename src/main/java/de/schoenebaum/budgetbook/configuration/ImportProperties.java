@@ -28,6 +28,7 @@ public class ImportProperties {
 		subject(true, true), amount(true, p -> {
 			DecimalFormatSymbols s = new DecimalFormatSymbols();
 			s.setDecimalSeparator(p.numberFormatDecimalSeparator);
+			s.setGroupingSeparator(p.numberFormatGroupingSeparator);
 			return new ParseBigDecimal(s);
 		}), externalId, relatedPartyName(true, true), relatedPartyId;
 
@@ -74,5 +75,6 @@ public class ImportProperties {
 
 	private List<String> dateFormatPatterns = Collections.singletonList("dd.MM.yyyy");
 	private char numberFormatDecimalSeparator = ',';
+	private char numberFormatGroupingSeparator = '.';
 
 }
