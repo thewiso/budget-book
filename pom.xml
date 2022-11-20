@@ -9,7 +9,7 @@
 	</parent>
 	<groupId>de.schoenebaum</groupId>
 	<artifactId>budget-book</artifactId>
-	<version>1.0</version>
+	<version>1.0.1</version>
 	<name>budget-book</name>
 	<description>An application to manage and analyze monthly income and expenses</description>
 	<properties>
