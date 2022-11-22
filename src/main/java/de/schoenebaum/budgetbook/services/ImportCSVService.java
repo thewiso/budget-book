@@ -114,7 +114,7 @@ public class ImportCSVService {
 			while ((transaction = beanReader.read(ExternalTransaction.class, nameMapping, cellProcessors)) != null) {
 				try {
 					if (transaction.getExternalId() == null) {
-						transaction.setExternalId(digestUtils.digestAsHex(stringifyExternalTransactionForHashCode(transaction)));
+						transaction.setExternalId(digestUtils.digestAsHex(beanReader.getUntokenizedRow()));
 					}
 
 					if (transaction.getAmount()
@@ -207,13 +207,4 @@ public class ImportCSVService {
 		}
 	}
 	
-	protected static String stringifyExternalTransactionForHashCode(ExternalTransaction externalTransaction) {
-		return new StringBuilder()
-				.append(externalTransaction.getAmount().toString())
-				.append(externalTransaction.getSubject())
-				.append(externalTransaction.getDate().toString())
-				.append(externalTransaction.getRelatedPartyName())
-				.append(externalTransaction.getRelatedPartyId())
-				.toString();
-	}
 }

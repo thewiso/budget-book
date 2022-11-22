@@ -131,6 +131,51 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>build-docker-image</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>docker</executable>
+							<arguments>
+								<argument>build</argument>
+								<argument>-f</argument>
+								<argument>deployment/Dockerfile</argument>
+								<argument>-t</argument>
+								<argument>${project.artifactId}:${project.version}</argument>
+								<argument>.</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>export-docker-image</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>docker</executable>
+							<arguments>
+								<argument>image</argument>
+								<argument>save</argument>
+								<argument>-o</argument>
+								<argument>deployment/images/${project.artifactId}-${project.version}.tar</argument>
+								<argument>${project.artifactId}:${project.version}</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<environmentVariables>
+						<IMAGE_NAME_AND_TAG>${project.artifactId}:${project.version}</IMAGE_NAME_AND_TAG>
+					</environmentVariables>
+				</configuration>
+			</plugin>
 		</plugins>
 		<finalName>${project.artifactId}</finalName>
 	</build>
